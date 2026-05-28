@@ -1,0 +1,426 @@
+/* ================================================================
+   ECORR MARKETING — COURSE PAGE
+   Wix Studio · Custom CSS Panel
+   ================================================================
+   HOW TO USE:
+     Studio → Site (top menu) → Custom CSS → paste this entire file
+     This single file replaces fonts.css + repeater.css + mobile.css
+     Keep it in one paste so load order is guaranteed.
+   ================================================================ */
+
+
+/* ================================================================
+   1. FONT FALLBACKS
+   Guarantees Montserrat and Open Sans load even if the Wix font
+   import fails. font-display:swap shows the fallback immediately
+   then swaps silently once the webfont arrives.
+   ================================================================ */
+
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src:
+    local('Montserrat Bold'),
+    local('Montserrat-Bold'),
+    url('https://fonts.gstatic.com/s/montserrat/v26/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src:
+    local('Montserrat ExtraBold'),
+    local('Montserrat-ExtraBold'),
+    url('https://fonts.gstatic.com/s/montserrat/v26/JTUSjIg1_i6t8kCHKm459WlhywM.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src:
+    local('Montserrat Black'),
+    local('Montserrat-Black'),
+    url('https://fonts.gstatic.com/s/montserrat/v26/JTUSjIg1_i6t8kCHKm459WlhywM.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src:
+    local('Open Sans Regular'),
+    local('OpenSans-Regular'),
+    url('https://fonts.gstatic.com/s/opensans/v36/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsiH0C4n.woff2') format('woff2');
+}
+
+/* Brand tokens — reference these anywhere with var(--color-gold) etc. */
+:root {
+  --font-headline:  'Montserrat', 'Arial Black', Arial, sans-serif;
+  --font-body:      'Open Sans',  Arial, Helvetica, sans-serif;
+  --color-gold:     #C19B6A;
+  --color-gold-lt:  #D4B48A;
+  --color-gold-dk:  #8A6A3F;
+  --color-black:    #0F0F0F;
+  --color-dark:     #1a1a1a;
+  --color-white:    #FFFFFF;
+}
+
+body {
+  font-family: var(--font-body);
+}
+
+h1, h2, h3 {
+  font-family: var(--font-headline);
+}
+
+
+/* ================================================================
+   2. ANIMATION INITIAL STATES
+   Hero elements and pain cards start invisible and slightly low.
+   page.js sets opacity:1 and translateY:0 at the right moment.
+   If you want to disable an animation, remove that element's ID
+   from this list and the corresponding fadeInSequence() call.
+   ================================================================ */
+
+#heroHeadline,
+#heroSubheadline,
+#primaryCTA,
+#secondaryCTA,
+#statStrip {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 500ms ease, transform 500ms ease;
+}
+
+#painCard1,
+#painCard2,
+#painCard3 {
+  opacity: 0;
+  transform: translateY(24px);
+  /* Slightly longer transition for a more cinematic card reveal */
+  transition: opacity 600ms ease, transform 600ms ease;
+}
+
+
+/* ================================================================
+   3. BUTTON HELPERS
+   .btn-hovered is toggled by page.js on #enrollCTA hover.
+   Wix does not expose transform on Button elements via Velo's
+   style API, so we use a CSS class toggle instead.
+   ================================================================ */
+
+.btn-hovered {
+  transform: scale(1.02) !important;
+  transition: transform 200ms ease !important;
+}
+
+
+/* ================================================================
+   4. CROSSED-OUT ORIGINAL PRICE
+   #originalPrice sits above #priceDisplay in the pricing card.
+   page.js shows/hides it based on whether ORIGINAL_PRICE is set.
+   ================================================================ */
+
+#originalPrice {
+  display: block;
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 20px;
+  color: #555555;
+  text-decoration: line-through;
+  margin-bottom: 4px;
+}
+
+
+/* ================================================================
+   5. MODULE REPEATER — 3-COLUMN GRID
+   ================================================================
+   Repeater item template (create these child elements in Editor):
+   ┌────────────────────────────────────────────────────────────┐
+   │  Repeater Item container                                    │
+   │    background #FFFFFF · border 1px #e0ddd6 · radius 12px   │
+   │    ├─ Text  ID: #moduleNum    28px Montserrat 800 #C19B6A  │
+   │    ├─ Text  ID: #moduleTitle  15px Montserrat 700 #0F0F0F  │
+   │    └─ Text  ID: #moduleDesc   13px Open Sans 400 #666666   │
+   └────────────────────────────────────────────────────────────┘
+   ================================================================ */
+
+/* Repeater wrapper */
+#moduleRepeater {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 equal columns, always */
+  gap: 20px;
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+/* Each card */
+#moduleRepeater .repeater-item,
+#moduleRepeater > * {
+  background-color: #FFFFFF;
+  border: 1px solid #e0ddd6;
+  border-radius: 12px;
+  padding: 22px;
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  /* GPU-composited so hover transition is smooth at 60fps */
+  transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+  will-change: transform, box-shadow;
+}
+
+/* Card hover */
+#moduleRepeater .repeater-item:hover,
+#moduleRepeater > *:hover {
+  border-color: #C19B6A;
+  box-shadow: 0 4px 20px rgba(193, 155, 106, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Module number */
+#moduleNum {
+  font-family: var(--font-headline);
+  font-weight: 800;
+  font-size: 28px;
+  color: #C19B6A;
+  line-height: 1;
+}
+
+/* Module title */
+#moduleTitle {
+  font-family: var(--font-headline);
+  font-weight: 700;
+  font-size: 15px;
+  color: #0F0F0F;
+  line-height: 1.35;
+  margin-top: 6px;
+}
+
+/* Module description */
+#moduleDesc {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 13px;
+  color: #666666;
+  line-height: 1.6;
+  margin-top: 6px;
+  flex-grow: 1; /* fills remaining vertical space in the card */
+}
+
+
+/* ================================================================
+   6. RESPONSIVE BREAKPOINTS
+   ================================================================ */
+
+/* ── Tablet: ≤768px ─────────────────────────────────────────── */
+@media (max-width: 768px) {
+
+  /* Reduce section padding on all strips */
+  #heroSection,
+  #painSection,
+  #curriculumSection,
+  #forSection,
+  #instructorSection,
+  #pricingSection {
+    padding-top: 60px;
+    padding-bottom: 60px;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  /* Hero headline */
+  #heroHeadline {
+    font-size: 40px;
+    line-height: 1.15;
+  }
+
+  #heroSubheadline {
+    font-size: 16px;
+  }
+
+  /* CTAs stack vertically and fill the full width */
+  #primaryCTA,
+  #secondaryCTA {
+    display: block;
+    width: 100%;
+    text-align: center;
+  }
+
+  /* Stat strip wraps and centres */
+  #statStrip {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px 20px;
+  }
+
+  /* Pain cards: 1 column */
+  #painCard1,
+  #painCard2,
+  #painCard3 {
+    width: 100%;
+  }
+
+  /* Instructor stats: 2-up grid */
+  #instructorSection .instructor__stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px 0;
+    justify-items: center;
+  }
+
+  /* Hide vertical stat dividers — grid spacing replaces them */
+  .stat-divider {
+    display: none;
+  }
+
+  /* Who It's For: single column */
+  #forSection .fit__inner {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  /* Module repeater: 2 columns on tablet */
+  #moduleRepeater {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+
+  /* Pricing card: tighten padding */
+  #pricingSection .pricing-card {
+    padding: 32px 24px;
+  }
+}
+
+/* ── Mobile: ≤390px ─────────────────────────────────────────── */
+@media (max-width: 390px) {
+
+  /* Even tighter section padding */
+  #heroSection,
+  #painSection,
+  #curriculumSection,
+  #forSection,
+  #instructorSection,
+  #pricingSection {
+    padding-top: 48px;
+    padding-bottom: 48px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  /* Hero headline */
+  #heroHeadline {
+    font-size: 32px;
+    line-height: 1.15;
+  }
+
+  #heroSubheadline {
+    font-size: 15px;
+    line-height: 1.65;
+  }
+
+  /* CTAs: reduce horizontal padding */
+  #primaryCTA,
+  #secondaryCTA {
+    padding: 14px 20px;
+    font-size: 13px;
+  }
+
+  /* Stat strip: stack vertically; dividers become horizontal bars */
+  #statStrip {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* Gold stat dividers rotate to horizontal on mobile */
+  #statStrip .divider {
+    width: 40px;
+    height: 1px;
+  }
+
+  /* Section headlines */
+  #painSection h2,
+  #curriculumSection h2 {
+    font-size: 26px;
+  }
+
+  #forSection .fit__headline {
+    font-size: 26px;
+  }
+
+  #instructorSection h2 {
+    font-size: 24px;
+  }
+
+  /* Instructor stats: single column */
+  #instructorSection .instructor__stats {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .stat-block__num {
+    font-size: 32px;
+  }
+
+  /* Module repeater: single column */
+  #moduleRepeater {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  #moduleRepeater .repeater-item,
+  #moduleRepeater > * {
+    padding: 18px;
+    min-height: auto;
+  }
+
+  /* Pricing card */
+  #pricingSection .pricing-card {
+    padding: 24px 18px;
+  }
+
+  #priceDisplay {
+    font-size: 48px;
+  }
+
+  #enrollCTA {
+    font-size: 13px;
+    padding: 16px 20px;
+  }
+
+  /* Footer: stack everything and centre */
+  #footerSection .footer__inner {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 20px;
+  }
+
+  #footerNav {
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+
+  #footerLogo {
+    margin: 0 auto;
+  }
+}
+
+/* ================================================================
+   NOTE ON WIX STUDIO BREAKPOINTS
+   Wix Studio has its own built-in breakpoints (1280 / 1080 / 768 /
+   390px). This CSS supplements those — it does not replace them.
+   If a Wix native layout rule conflicts with a rule here, add
+   !important to this rule as a last resort. Always prefer adjusting
+   the native breakpoint in the Editor layout panel first.
+   ================================================================ */
