@@ -1,0 +1,84 @@
+/* ============================================================
+   ECorr Marketing — Font Fallback CSS
+   Paste into: Wix Studio → Site → Custom CSS panel
+   Purpose: Guarantees Montserrat and Open Sans render correctly
+   even if the Wix Dashboard font import fails to fully load.
+   ============================================================ */
+
+/* ── Montserrat 700 (Bold) ──────────────────────────────────
+   Used by: CTA buttons, labels, section tags, list titles      */
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap; /* show fallback immediately, swap when loaded */
+  src:
+    local('Montserrat Bold'),
+    local('Montserrat-Bold'),
+    url('https://fonts.gstatic.com/s/montserrat/v26/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2') format('woff2');
+}
+
+/* ── Montserrat 800 (ExtraBold) ─────────────────────────────
+   Used by: all major headlines (h1, h2), module numbers        */
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src:
+    local('Montserrat ExtraBold'),
+    local('Montserrat-ExtraBold'),
+    url('https://fonts.gstatic.com/s/montserrat/v26/JTUSjIg1_i6t8kCHKm459WlhywM.woff2') format('woff2');
+}
+
+/* ── Montserrat 900 (Black) ─────────────────────────────────
+   Used by: stat blocks in instructor section, price display     */
+@font-face {
+  font-family: 'Montserrat';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src:
+    local('Montserrat Black'),
+    local('Montserrat-Black'),
+    url('https://fonts.gstatic.com/s/montserrat/v26/JTUSjIg1_i6t8kCHKm459WlhywM.woff2') format('woff2');
+}
+
+/* ── Open Sans 400 (Regular) ────────────────────────────────
+   Used by: all body copy, card descriptions, footer text        */
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src:
+    local('Open Sans Regular'),
+    local('OpenSans-Regular'),
+    url('https://fonts.gstatic.com/s/opensans/v36/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsiH0C4n.woff2') format('woff2');
+}
+
+/* ── System fallback stacks ─────────────────────────────────
+   Applied directly on elements so browsers render immediately   */
+:root {
+  --font-headline: 'Montserrat', 'Arial Black', Arial, sans-serif;
+  --font-body:     'Open Sans',  Arial, Helvetica, sans-serif;
+
+  /* Brand color tokens */
+  --color-gold:       #C19B6A;
+  --color-gold-light: #D4B48A;
+  --color-gold-dark:  #8A6A3F;
+  --color-black:      #0F0F0F;
+  --color-dark:       #1a1a1a;
+  --color-white:      #FFFFFF;
+}
+
+/* Apply fallback stacks globally as a safety net */
+body {
+  font-family: var(--font-body);
+}
+
+h1, h2, h3,
+.montserrat,
+[data-font="montserrat"] {
+  font-family: var(--font-headline);
+}

@@ -1,0 +1,202 @@
+/* ============================================================
+   ECorr Marketing — Mobile & Tablet Breakpoints  (Step 5B)
+   Paste into: Wix Studio → Custom CSS panel
+   Apply AFTER fonts.css and repeater.css in the panel.
+   ============================================================ */
+
+/* ── BREAKPOINT 1: Tablet ≤768px ───────────────────────────── */
+@media (max-width: 768px) {
+
+  /* All sections: reduce vertical breathing room */
+  #heroSection,
+  #painSection,
+  #curriculumSection,
+  #forSection,
+  #instructorSection,
+  #pricingSection {
+    padding-top: 60px;
+    padding-bottom: 60px;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  /* ── Hero ──────────────────────────────────────────────── */
+  #heroHeadline {
+    font-size: 40px;
+    line-height: 1.15;
+  }
+
+  #heroSubheadline {
+    font-size: 16px;
+  }
+
+  /* CTAs stack vertically and go full width */
+  .hero__ctas,
+  #heroCTARow {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    width: 100%;
+  }
+
+  #primaryCTA,
+  #secondaryCTA {
+    width: 100%;
+    text-align: center;
+  }
+
+  /* Stat strip: allow wrapping on tablet */
+  #statStrip {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px 20px;
+  }
+
+  /* ── Pain cards: single column stack ──────────────────── */
+  #painSection .pain__cards {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  /* ── Instructor stats: wrap to 2-up ──────────────────── */
+  #instructorSection .instructor__stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px 0;
+    justify-items: center;
+  }
+
+  /* Hide the vertical stat dividers on tablet (grid handles spacing) */
+  .stat-divider {
+    display: none;
+  }
+
+  /* ── Who It's For: single column ──────────────────────── */
+  #forSection .fit__inner {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  /* ── Pricing card ──────────────────────────────────────── */
+  #pricingSection .pricing-card {
+    padding: 32px 24px;
+  }
+}
+
+/* ── BREAKPOINT 2: Mobile ≤390px ───────────────────────────── */
+@media (max-width: 390px) {
+
+  /* All sections: tighter padding on smallest screens */
+  #heroSection,
+  #painSection,
+  #curriculumSection,
+  #forSection,
+  #instructorSection,
+  #pricingSection {
+    padding-top: 48px;
+    padding-bottom: 48px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  /* ── Hero ──────────────────────────────────────────────── */
+  #heroHeadline {
+    font-size: 32px;
+    line-height: 1.15;
+  }
+
+  #heroSubheadline {
+    font-size: 15px;
+    line-height: 1.65;
+  }
+
+  /* CTAs: full width, reduce horizontal padding */
+  #primaryCTA,
+  #secondaryCTA {
+    padding: 14px 20px;
+    font-size: 13px;
+  }
+
+  /* Stat strip: stack vertically on smallest screens;
+     gold dividers become thin horizontal rules             */
+  #statStrip {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  #statStrip .divider {
+    width: 40px;       /* horizontal rule instead of vertical bar */
+    height: 1px;
+  }
+
+  /* ── Pain headline ─────────────────────────────────────── */
+  #painSection h2 {
+    font-size: 26px;
+  }
+
+  /* ── Curriculum headline ───────────────────────────────── */
+  #curriculumSection h2 {
+    font-size: 26px;
+  }
+
+  /* ── Who It's For headline ─────────────────────────────── */
+  #forSection .fit__headline {
+    font-size: 26px;
+  }
+
+  /* ── Instructor section ────────────────────────────────── */
+  #instructorSection h2 {
+    font-size: 24px;
+  }
+
+  /* Instructor stats: single column on smallest mobile */
+  #instructorSection .instructor__stats {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .stat-block__num {
+    font-size: 32px;
+  }
+
+  /* ── Pricing card ──────────────────────────────────────── */
+  #pricingSection .pricing-card {
+    padding: 24px 18px;
+  }
+
+  #priceDisplay {
+    font-size: 48px;
+  }
+
+  #enrollCTA {
+    font-size: 13px;
+    padding: 16px 20px;
+  }
+
+  /* ── Footer: fully stacked and centered ────────────────── */
+  #footerSection .footer__inner {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 20px;
+  }
+
+  #footerNav {
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+
+  #footerLogo {
+    margin: 0 auto;
+  }
+}
+
+/* ── Wix Studio Breakpoint Override Note ───────────────────────
+   Wix Studio has built-in breakpoints at 1280px, 1080px, 768px,
+   and 390px. These CSS rules SUPPLEMENT those breakpoints.
+   If Wix's native responsive behaviour conflicts with a rule here,
+   add !important to the conflicting property as a last resort — but
+   prefer adjusting the native breakpoint in the Editor first.
+   ─────────────────────────────────────────────────────────────── */

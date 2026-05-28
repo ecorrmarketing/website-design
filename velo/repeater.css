@@ -1,0 +1,109 @@
+/* ============================================================
+   ECorr Marketing — Module Repeater Layout CSS  (Step 4)
+   Paste into: Wix Studio → Page CSS panel (or Custom CSS)
+   Targets the #moduleRepeater component and its child items.
+   ============================================================
+
+   REPEATER ITEM TEMPLATE — create these child elements inside
+   the repeater in Wix Editor, then assign these IDs:
+
+   ┌──────────────────────────────────────────────────────┐
+   │  Repeater Item (container — border-radius 12px)       │
+   │  ├─ Text  ID: #moduleNum   (28px Montserrat 800 gold) │
+   │  ├─ Text  ID: #moduleTitle (15px Montserrat 700 black)│
+   │  └─ Text  ID: #moduleDesc  (13px Open Sans 400 #666)  │
+   └──────────────────────────────────────────────────────┘
+
+   In the Editor, set the repeater item container background
+   to #FFFFFF and border to 1px solid #e0ddd6.
+   ============================================================ */
+
+/* ── Repeater wrapper — 3-column grid ────────────────────── */
+#moduleRepeater {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* strict 3-equal columns */
+  gap: 20px;
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0; /* section padding handles outer spacing */
+}
+
+/* ── Individual module card ───────────────────────────────── */
+#moduleRepeater .repeater-item,       /* Wix Editor auto-class  */
+#moduleRepeater > * {                 /* fallback universal child */
+  background-color: #FFFFFF;
+  border: 1px solid #e0ddd6;
+  border-radius: 12px;
+  padding: 22px;
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  /* Hardware-accelerated transition for hover */
+  transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+  will-change: transform, box-shadow;
+  cursor: default;
+}
+
+/* Card hover state */
+#moduleRepeater .repeater-item:hover,
+#moduleRepeater > *:hover {
+  border-color: #C19B6A;
+  box-shadow: 0 4px 20px rgba(193, 155, 106, 0.15);
+  transform: translateY(-2px); /* subtle lift */
+}
+
+/* ── Module number (01–12) ────────────────────────────────── */
+#moduleNum {
+  font-family: 'Montserrat', 'Arial Black', Arial, sans-serif;
+  font-weight: 800;
+  font-size: 28px;
+  color: #C19B6A;
+  line-height: 1;
+  margin-bottom: 0;
+}
+
+/* ── Module title ─────────────────────────────────────────── */
+#moduleTitle {
+  font-family: 'Montserrat', 'Arial Black', Arial, sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: #0F0F0F;
+  line-height: 1.35;
+  margin-top: 6px;
+}
+
+/* ── Module description ───────────────────────────────────── */
+#moduleDesc {
+  font-family: 'Open Sans', Arial, Helvetica, sans-serif;
+  font-weight: 400;
+  font-size: 13px;
+  color: #666666;
+  line-height: 1.6;
+  margin-top: 6px;
+  flex-grow: 1; /* push desc to fill remaining card height */
+}
+
+/* ── Tablet: 2-column grid ────────────────────────────────── */
+@media (max-width: 768px) {
+  #moduleRepeater {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
+/* ── Mobile: 1-column grid ────────────────────────────────── */
+@media (max-width: 390px) {
+  #moduleRepeater {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  /* Slightly reduce card padding on smallest screens */
+  #moduleRepeater .repeater-item,
+  #moduleRepeater > * {
+    padding: 18px;
+    min-height: auto;
+  }
+}
