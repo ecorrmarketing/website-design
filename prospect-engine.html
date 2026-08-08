@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ECorr Prospect Engine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --gold:#C19B6A; --black:#0F0F0F; --ink:#171717; --line:#2b2b2b;
+  --muted:#9c9c9c; --hot:#C19B6A; --warm:#d8c3a5; --low:#6b6b6b;
+  --good:#1e9e57; --ok:#e8a020; --bad:#cf3535;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--black);color:#fff;font-family:'Archivo',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.display{font-family:'Anton','Archivo',sans-serif;text-transform:uppercase;letter-spacing:.02em}
+.shell{max-width:1360px;margin:0 auto;padding:0 20px 70px}
+.apphead{border-bottom:1px solid var(--line);margin-bottom:22px}
+.apphead .inner{max-width:1360px;margin:0 auto;padding:22px 20px;display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px}
+.apphead h1{font-size:26px}
+.apphead h1 span{color:var(--gold)}
+.apphead .tag{font-size:11px;letter-spacing:.16em;color:var(--muted);text-transform:uppercase}
+.card{background:var(--ink);border:1px solid var(--line);border-radius:10px;padding:18px;margin-bottom:16px}
+label.sm{display:block;font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+input[type=text],input[type=number],input[type=url],select,textarea{
+  width:100%;background:var(--black);border:1px solid var(--line);border-radius:6px;color:#fff;
+  padding:9px 10px;font-size:13px;font-family:'Archivo';outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--gold)}
+textarea{resize:vertical;min-height:120px;font-family:ui-monospace,monospace;font-size:12px}
+.btn{background:var(--gold);color:var(--black);border:none;border-radius:6px;padding:11px 20px;
+  font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;cursor:pointer;font-family:'Archivo'}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.ghost{background:transparent;color:var(--gold);border:1px solid var(--gold);font-weight:600;padding:9px 15px;font-size:11.5px}
+.btn.dim{background:transparent;color:var(--muted);border:1px solid var(--line);font-weight:600;padding:9px 15px;font-size:11.5px}
+.btn.small{padding:6px 12px;font-size:11px}
+.row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.note{font-size:12px;color:var(--muted);line-height:1.55}
+select{width:auto;min-width:200px}
+/* toolbar */
+.toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px}
+.stats{display:flex;gap:18px;flex-wrap:wrap;font-size:13px}
+.stats b{color:var(--gold)}
+.stats .w b{color:var(--warm)}
+.searchbox{width:220px}
+.tierbtns button{background:var(--ink);border:1px solid var(--line);color:var(--muted);border-radius:6px;
+  padding:8px 14px;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;font-family:'Archivo'}
+.tierbtns button.active{background:var(--gold);color:var(--black);border-color:var(--gold)}
+/* table */
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+table{width:100%;border-collapse:collapse;min-width:1220px;font-size:12.5px}
+th{position:sticky;top:0;background:var(--ink);text-align:left;font-size:10px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--muted);padding:10px 8px;border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer}
+th:hover{color:var(--gold)}
+th.nosort{cursor:default}
+td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:hover td{background:#1b1b1b}
+td input,td select{padding:6px 7px;font-size:12px;border-radius:5px;min-width:70px}
+td input.company{min-width:150px;font-weight:600}
+td input.wide{min-width:120px}
+td input.narrow{width:56px;min-width:56px}
+.scorecell{font-family:'Anton';font-size:17px;text-align:center;min-width:44px}
+.tierpill{display:block;font-size:9px;letter-spacing:.08em;text-transform:uppercase;text-align:center;margin-top:2px}
+.signals{font-size:10.5px;color:var(--muted);max-width:170px}
+.chip{display:inline-block;font-size:9.5px;background:#232323;border:1px solid var(--line);border-radius:999px;
+  padding:2px 7px;margin:1px 2px 0 0;color:#d8c3a5;white-space:nowrap}
+.delbtn{background:none;border:none;color:var(--muted);font-size:15px;cursor:pointer;padding:4px}
+.delbtn:hover{color:var(--bad)}
+.empty{text-align:center;padding:60px 20px;color:var(--muted)}
+.pastebox{display:none;margin-top:12px}
+.pastebox.show{display:block}
+.help{font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.6}
+.copytoast{font-size:12px;color:var(--gold);margin-top:8px}
+.searchcard{border-color:var(--gold)}
+.searchstatus{font-size:12.5px;color:#d8c3a5;margin-top:10px;line-height:1.6;min-height:16px;white-space:pre-line}
+.linkcell{display:flex;align-items:center;gap:4px}
+.linkcell input{flex:1;min-width:90px}
+.golink{color:var(--gold);text-decoration:none;font-size:14px;flex-shrink:0;padding:2px}
+.golink:hover{color:#fff}
+@media(max-width:800px){.apphead .inner{padding:18px}}
+</style>
+</head>
+<body>
+
+<div class="apphead">
+  <div class="inner">
+    <h1 class="display">ECorr <span>Prospect Engine</span></h1>
+    <div class="tag">Track · Score · Rank · Export</div>
+  </div>
+</div>
+
+<div class="shell">
+
+  <div class="card searchcard">
+    <div class="row" style="justify-content:space-between;align-items:flex-start">
+      <div style="flex:1;min-width:260px">
+        <label class="sm" for="fp_city">Find Prospects — free live search</label>
+        <div class="row">
+          <input type="text" id="fp_city" style="max-width:220px" placeholder="City, ST (e.g. Fort Worth, TX)">
+          <select id="fp_vertical" style="min-width:190px"></select>
+          <select id="fp_radius" style="min-width:110px">
+            <option value="16093">10 miles</option>
+            <option value="40234" selected>25 miles</option>
+            <option value="80467">50 miles</option>
+          </select>
+          <button class="btn" id="btn_findprospects">Search</button>
+        </div>
+        <div id="fp_customwrap" style="display:none;margin-top:9px;max-width:320px">
+          <label class="sm" for="fp_keyword">Keyword to search for (business name contains…)</label>
+          <input type="text" id="fp_keyword" placeholder="e.g. TRT, peptide clinic, remodeling">
+        </div>
+        <div class="help">Searches OpenStreetMap's free public business directory — real company names, addresses, phone, and website where mapped. Coverage varies by area and category and won't match Google Maps' completeness, and there's no review count, ad status, or SEO data — you'll still classify those signals with the dropdowns below. Results are added to your current list and deduplicated automatically.</div>
+        <div class="searchstatus" id="fp_status" aria-live="polite"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <div class="row">
+        <label class="sm" style="margin:0 6px 0 0" for="listsel">List</label>
+        <select id="listsel"></select>
+        <button class="btn dim small" id="btn_new">+ New List</button>
+        <button class="btn dim small" id="btn_rename">Rename</button>
+        <button class="btn dim small" id="btn_delete_list">Delete List</button>
+      </div>
+      <div class="row">
+        <button class="btn ghost small" id="btn_addrow">+ Add Prospect</button>
+        <button class="btn ghost small" id="btn_paste">Paste CSV</button>
+      </div>
+    </div>
+    <div class="pastebox" id="pastebox">
+      <label class="sm" style="margin-top:14px" for="pastearea">Paste CSV (from the ECorr Mac scraper, a spreadsheet, or Google Maps export)</label>
+      <textarea id="pastearea" placeholder="Business Name,Phone,Website,Location,Owner,Email
+Acme Roofing,555-0100,acmeroofing.com,Fort Worth TX,John Smith,john@acmeroofing.com"></textarea>
+      <div class="help">Recognizes common headers automatically: Company/Business Name, First/Last Name or Owner, Phone, Email, Location/Address, Website, LinkedIn, Reviews, Rating. Unrecognized columns are ignored. Duplicate company names are skipped.</div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn small" id="btn_import">Import Rows</button>
+        <button class="btn dim small" id="btn_cancel_paste">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="stats" id="stats"></div>
+    <div class="row">
+      <input class="searchbox" type="text" id="search" placeholder="Search company, owner, location…">
+      <div class="tierbtns row" id="tierbtns">
+        <button data-t="all" class="active">All</button>
+        <button data-t="hot">Hot</button>
+        <button data-t="warm">Warm</button>
+        <button data-t="low">Low</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tablewrap">
+    <table id="ptable">
+      <thead><tr>
+        <th data-sort="score">Score <span id="sortarrow">▾</span></th>
+        <th class="nosort">Company</th>
+        <th class="nosort">Owner</th>
+        <th class="nosort">Phone</th>
+        <th class="nosort">Email</th>
+        <th class="nosort">Location</th>
+        <th class="nosort">Website</th>
+        <th class="nosort">LinkedIn</th>
+        <th class="nosort" title="Total Google/Yelp reviews">Rev #</th>
+        <th class="nosort" title="Average rating 0-5">Rating</th>
+        <th class="nosort" title="Your assessment of their current site quality">Web Quality</th>
+        <th class="nosort">Ads</th>
+        <th class="nosort">SEO</th>
+        <th class="nosort">Signals</th>
+        <th class="nosort"></th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <div class="empty" id="emptystate" style="display:none">
+    <div class="display" style="font-size:17px;color:#fff;margin-bottom:6px">No prospects yet</div>
+    <div class="note">Add one manually or paste a CSV list to get started.</div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <div class="row" style="justify-content:space-between">
+      <div class="note">Export the current list, filtered by whatever's showing in the table above.</div>
+      <div class="row">
+        <button class="btn ghost" id="btn_csv">GHL CSV</button>
+        <button class="btn ghost" id="btn_xlsx">Excel</button>
+        <button class="btn ghost" id="btn_copy">Copy for Sheets</button>
+      </div>
+    </div>
+    <div class="copytoast" id="copytoast" style="display:none" aria-live="polite">Copied — paste into Google Sheets.</div>
+  </div>
+
+  <div class="card" style="background:transparent;border:none;padding:8px 4px">
+    <div class="note"><b style="color:#d8c3a5">Scoring:</b> No website +30 · Weak website +20 · Weak reviews (under 20, or under 4.0★) +25 · No ads +25 (unverified +10) · Low SEO visibility +20. <b style="color:var(--gold)">70+ Hot</b> · <b style="color:var(--warm)">45–69 Warm</b> · <b style="color:var(--low)">under 45 Low</b>.</div>
+  </div>
+
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+   ECORR PROSPECT ENGINE — GHL edition
+   Free, no API calls, no AI. Paste-in / manual spreadsheet
+   scoring identical to the Mac scraper + Prospect Engine app.
+   ============================================================ */
+
+const LKEY = "ecorr-prospect-lists";
+const $ = id => document.getElementById(id);
+const esc = s => String(s??"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const uid = () => Math.random().toString(36).slice(2,10);
+
+function blankProspect(){
+  return { id: uid(), company:"", owner:"", phone:"", email:"", location:"",
+    website:"", linkedin:"", reviews:"", rating:"", webq:"unknown", ads:"unknown", seo:"unknown" };
+}
+
+/* ---------------- Scoring (matches Mac scraper + artifact) ---------------- */
+function score(p){
+  let s = 0; const sig = [];
+  if (p.webq === "none"){ s+=30; sig.push("No website"); }
+  else if (p.webq === "weak"){ s+=20; sig.push("Weak website"); }
+  const rc = parseFloat(p.reviews), rt = parseFloat(p.rating);
+  if ((isFinite(rc) && rc>=0 && rc<20) || (isFinite(rt) && rt>0 && rt<4.0)){
+    s+=25; sig.push(`Weak reviews (${isFinite(rc)?rc:"?"} @ ${isFinite(rt)&&rt>0?rt:"?"}★)`);
+  }
+  if (p.ads === "no"){ s+=25; sig.push("No ads running"); }
+  else if (p.ads === "unverified" || p.ads === "unknown"){ s+=10; sig.push("Ads unverified"); }
+  if (p.seo === "low"){ s+=20; sig.push("Low SEO visibility"); }
+  return { score: Math.min(s,100), signals: sig };
+}
+function tier(s){ return s>=70?"hot":s>=45?"warm":"low"; }
+function tierLabel(t){ return t==="hot"?"HOT":t==="warm"?"WARM":"LOW"; }
+function tierColor(t){ return t==="hot"?"var(--hot)":t==="warm"?"var(--warm)":"var(--low)"; }
+const normKey = s => (s||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+function normalizeUrl(w){
+  const s = (w||"").trim();
+  if (!s) return "";
+  return /^https?:\/\//i.test(s) ? s : "https://" + s;
+}
+/* Guards against CSV/formula injection: a leading =,+,-,@ (or tab/CR) makes
+   Excel/Sheets/GHL treat the cell as a formula when the export is opened. */
+function csvSafe(v){
+  const s = String(v ?? "").trim();
+  return /^[=+\-@\t\r]/.test(s) ? "'" + s : s;
+}
+
+/* ---------------- State: lists stored in localStorage ---------------- */
+let LISTS = {};
+let currentId = null;
+let sortDesc = true;
+let tierFilter = "all";
+let searchTerm = "";
+
+function loadAll(){
+  try { LISTS = JSON.parse(localStorage.getItem(LKEY) || "{}"); } catch(e){ LISTS = {}; }
+  if (Object.keys(LISTS).length === 0){
+    const id = uid();
+    LISTS[id] = { name: "My Prospects", prospects: [] };
+  }
+  currentId = Object.keys(LISTS)[0];
+}
+function persist(){
+  try { localStorage.setItem(LKEY, JSON.stringify(LISTS)); }
+  catch(e){ alert("Storage full — delete an old list to free up space. Your changes are only kept in this browser tab until you free up space."); }
+}
+function current(){ return LISTS[currentId]; }
+
+/* Switches the view back to "All" / no search so newly added rows are
+   never silently hidden behind a stale tier filter or search term. */
+function showAllFilter(){
+  tierFilter = "all"; searchTerm = "";
+  $("search").value = "";
+  document.querySelectorAll("#tierbtns button").forEach(x=>x.classList.remove("active"));
+  document.querySelector('#tierbtns button[data-t="all"]').classList.add("active");
+}
+
+function renderListSelect(){
+  const sel = $("listsel");
+  sel.innerHTML = Object.keys(LISTS).map(id=>
+    `<option value="${id}" ${id===currentId?"selected":""}>${esc(LISTS[id].name)} (${LISTS[id].prospects.length})</option>`
+  ).join("");
+}
+
+/* ---------------- Table rendering ---------------- */
+function filteredSorted(){
+  let list = current().prospects.map(p=>{
+    const r = score(p);
+    return Object.assign({}, p, { _score: r.score, _signals: r.signals, _tier: tier(r.score) });
+  });
+  if (tierFilter !== "all") list = list.filter(p=>p._tier===tierFilter);
+  if (searchTerm){
+    const q = searchTerm.toLowerCase();
+    list = list.filter(p => (p.company+" "+p.owner+" "+p.location).toLowerCase().includes(q));
+  }
+  list.sort((a,b)=> sortDesc ? b._score-a._score : a._score-b._score);
+  return list;
+}
+
+function selCell(id, field, val, opts){
+  return `<select data-id="${id}" data-f="${field}">` +
+    opts.map(([v,l])=>`<option value="${v}" ${v===val?"selected":""}>${l}</option>`).join("") + `</select>`;
+}
+
+function renderTable(){
+  const rows = filteredSorted();
+  $("emptystate").style.display = current().prospects.length===0 ? "block" : "none";
+  $("tbody").innerHTML = rows.map(p=>{
+    const t = p._tier;
+    const link = p.website ? `<a class="golink" href="${esc(normalizeUrl(p.website))}" target="_blank" rel="noopener noreferrer" title="Visit site">↗</a>` : "";
+    return `<tr data-row="${p.id}">
+      <td><div class="scorecell" style="color:${tierColor(t)}">${p._score}</div><div class="tierpill" style="color:${tierColor(t)}">${tierLabel(t)}</div></td>
+      <td><input class="company" data-id="${p.id}" data-f="company" value="${esc(p.company)}" placeholder="Company name"></td>
+      <td><input class="wide" data-id="${p.id}" data-f="owner" value="${esc(p.owner)}" placeholder="Owner"></td>
+      <td><input class="wide" data-id="${p.id}" data-f="phone" value="${esc(p.phone)}" placeholder="Phone"></td>
+      <td><input class="wide" data-id="${p.id}" data-f="email" value="${esc(p.email)}" placeholder="Email"></td>
+      <td><input class="wide" data-id="${p.id}" data-f="location" value="${esc(p.location)}" placeholder="City, ST"></td>
+      <td><div class="linkcell"><input class="wide" data-id="${p.id}" data-f="website" value="${esc(p.website)}" placeholder="Website">${link}</div></td>
+      <td><input class="wide" data-id="${p.id}" data-f="linkedin" value="${esc(p.linkedin)}" placeholder="LinkedIn"></td>
+      <td><input class="narrow" type="number" min="0" step="1" data-id="${p.id}" data-f="reviews" value="${esc(p.reviews)}"></td>
+      <td><input class="narrow" type="number" min="0" max="5" step="0.1" data-id="${p.id}" data-f="rating" value="${esc(p.rating)}"></td>
+      <td>${selCell(p.id,"webq",p.webq,[["unknown","—"],["good","Good"],["weak","Weak"],["none","None"]])}</td>
+      <td>${selCell(p.id,"ads",p.ads,[["unknown","—"],["yes","Yes"],["no","No"],["unverified","Unverified"]])}</td>
+      <td>${selCell(p.id,"seo",p.seo,[["unknown","—"],["high","High"],["low","Low"]])}</td>
+      <td class="signals">${p._signals.map(s=>`<span class="chip">${esc(s)}</span>`).join("")||"—"}</td>
+      <td><button class="delbtn" data-del="${p.id}" title="Delete">✕</button></td>
+    </tr>`;
+  }).join("");
+  bindRowEvents();
+  renderStats();
+}
+
+function bindRowEvents(){
+  document.querySelectorAll("#tbody input, #tbody select").forEach(el=>{
+    el.onchange = () => {
+      const id = el.dataset.id, f = el.dataset.f;
+      const p = current().prospects.find(x=>x.id===id);
+      if (p){ p[f] = el.value; persist(); renderTable(); renderListSelect(); }
+    };
+  });
+  document.querySelectorAll("[data-del]").forEach(el=>{
+    el.onclick = () => {
+      current().prospects = current().prospects.filter(x=>x.id!==el.dataset.del);
+      persist(); renderTable(); renderListSelect();
+    };
+  });
+}
+
+function renderStats(){
+  const all = current().prospects.map(p=>score(p).score);
+  const hot = all.filter(s=>s>=70).length;
+  const warm = all.filter(s=>s>=45&&s<70).length;
+  $("stats").innerHTML = `
+    <span><b>${all.length}</b> prospects</span>
+    <span><b style="color:var(--hot)">${hot}</b> hot</span>
+    <span class="w"><b>${warm}</b> warm</span>`;
+}
+
+/* ---------------- CSV import ---------------- */
+const HEADER_MAP = {
+  company: ["business name","company","company name","name"],
+  first: ["first name"], last: ["last name"],
+  owner: ["owner","owner name","contact"],
+  phone: ["phone","phone number"],
+  email: ["email"],
+  location: ["location","city","address"],
+  website: ["website","site","url"],
+  linkedin: ["linkedin"],
+  reviews: ["reviews","review count","rev #","total reviews"],
+  rating: ["rating","score(reviews)","avg rating"]
+};
+function parseCSVLine(line){
+  const out = []; let cur=""; let q=false;
+  for (let i=0;i<line.length;i++){
+    const c=line[i];
+    if (q){
+      if (c==='"' && line[i+1]==='"'){ cur+='"'; i++; }
+      else if (c==='"'){ q=false; }
+      else cur+=c;
+    } else {
+      if (c==='"') q=true;
+      else if (c===','){ out.push(cur); cur=""; }
+      else cur+=c;
+    }
+  }
+  out.push(cur);
+  return out.map(s=>s.trim());
+}
+function importCSV(text){
+  const lines = text.split(/\r?\n/).filter(l=>l.trim().length);
+  if (lines.length < 2){ alert("Paste a header row plus at least one data row."); return; }
+  const headers = parseCSVLine(lines[0]).map(h=>h.toLowerCase().trim());
+  const colIndex = {};
+  for (const key in HEADER_MAP){
+    for (const alias of HEADER_MAP[key]){
+      const idx = headers.indexOf(alias);
+      if (idx !== -1){ colIndex[key] = idx; break; }
+    }
+  }
+  if (colIndex.company === undefined){
+    alert("Couldn't find a company/business name column — check your header row.");
+    return;
+  }
+  const existing = new Set(current().prospects.map(p=>normKey(p.company)));
+  let added=0, skipped=0;
+  for (let i=1;i<lines.length;i++){
+    const cols = parseCSVLine(lines[i]);
+    const get = k => colIndex[k]!==undefined ? (cols[colIndex[k]]||"").trim() : "";
+    const company = get("company");
+    if (!company) continue;
+    const key = normKey(company);
+    if (existing.has(key)){ skipped++; continue; }
+    existing.add(key);
+    const owner = get("owner") || [get("first"),get("last")].filter(Boolean).join(" ");
+    current().prospects.push(Object.assign(blankProspect(), {
+      company, owner, phone:get("phone"), email:get("email"), location:get("location"),
+      website:get("website"), linkedin:get("linkedin"), reviews:get("reviews"), rating:get("rating"),
+      webq: get("website") ? "unknown" : "none"
+    }));
+    added++;
+  }
+  persist();
+  if (added>0) showAllFilter();
+  renderTable(); renderListSelect();
+  alert(`Imported ${added} prospect${added!==1?"s":""}.` + (skipped?` Skipped ${skipped} duplicate${skipped!==1?"s":""}.`:""));
+}
+
+/* ---------------- Find Prospects (OpenStreetMap — free, no key, CORS-open) ---------------- */
+const VERTICALS = {
+  "Roofing": { tags:[["craft","roofer"]], kw:"roofing" },
+  "Solar Installation": { tags:[], kw:"solar" },
+  "HVAC": { tags:[["craft","hvac"]], kw:"hvac|heating|air.?condition" },
+  "Med Spa": { tags:[["shop","beauty"],["amenity","spa"]], kw:"med.?spa|aesthetics|medspa" },
+  "TRT / Wellness Clinic": { tags:[["amenity","clinic"]], kw:"trt|testosterone|hormone|wellness|men.?s health" },
+  "Dental / Orthodontics": { tags:[["amenity","dentist"]], kw:"dental|dentist|orthodont" },
+  "Personal Injury Law": { tags:[["office","lawyer"]], kw:"injury|accident|attorney" },
+  "Home Remodeling": { tags:[], kw:"remodel|renovation|construction" },
+  "Plumbing": { tags:[["craft","plumber"]], kw:"plumbing|plumber" },
+  "Landscaping / Hardscape": { tags:[["craft","gardener"]], kw:"landscap|hardscape|lawn" },
+  "Marketing Agency": { tags:[["office","advertising_agency"]], kw:"marketing|advertising agency" },
+  "Custom keyword…": { tags:[], kw:"" }
+};
+
+function renderVerticalSelect(){
+  const sel = $("fp_vertical");
+  sel.innerHTML = Object.keys(VERTICALS).map(v=>`<option>${esc(v)}</option>`).join("");
+  sel.onchange = () => {
+    $("fp_customwrap").style.display = sel.value === "Custom keyword…" ? "block" : "none";
+  };
+}
+
+async function fetchWithTimeout(url, opts, ms){
+  const ctrl = new AbortController();
+  const timer = setTimeout(()=>ctrl.abort(), ms);
+  try {
+    return await fetch(url, Object.assign({}, opts, { signal: ctrl.signal }));
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function geocodeCity(city){
+  const url = "https://nominatim.openstreetmap.org/search?format=json&limit=1&q=" + encodeURIComponent(city);
+  let r;
+  try {
+    r = await fetchWithTimeout(url, { headers: { "Accept":"application/json" } }, 20000);
+  } catch(e){
+    throw new Error(e.name === "AbortError" ? "geocoding timed out — try again" : "couldn't reach the geocoding service — check your connection");
+  }
+  if (!r.ok) throw new Error("geocoding failed (HTTP " + r.status + ")");
+  const j = await r.json();
+  if (!j.length) throw new Error("couldn't find that city — try a broader name, e.g. \"Fort Worth, TX\"");
+  return { lat: j[0].lat, lon: j[0].lon, label: j[0].display_name };
+}
+
+function buildOverpassQuery(lat, lon, radiusM, tags, keyword){
+  const clauses = [];
+  for (const [k,v] of tags){
+    clauses.push(`node["${k}"="${v}"](around:${radiusM},${lat},${lon});`);
+    clauses.push(`way["${k}"="${v}"](around:${radiusM},${lat},${lon});`);
+  }
+  if (keyword && keyword.trim()){
+    const kw = keyword.trim().replace(/["\\]/g,"");
+    clauses.push(`node["name"~"${kw}",i](around:${radiusM},${lat},${lon});`);
+    clauses.push(`way["name"~"${kw}",i](around:${radiusM},${lat},${lon});`);
+  }
+  return `[out:json][timeout:25];(${clauses.join("")});out center tags 80;`;
+}
+
+async function overpassSearch(query){
+  let r;
+  try {
+    r = await fetchWithTimeout("https://overpass-api.de/api/interpreter", {
+      method: "POST",
+      body: "data=" + encodeURIComponent(query)
+    }, 30000);
+  } catch(e){
+    throw new Error(e.name === "AbortError" ? "search timed out — Overpass can be slow at peak times, try again" : "couldn't reach OpenStreetMap — check your connection");
+  }
+  if (!r.ok) throw new Error("OpenStreetMap search failed (HTTP " + r.status + ") — try again in a moment");
+  const j = await r.json();
+  return j.elements || [];
+}
+
+function elementToProspect(el, fallbackLocation){
+  const t = el.tags || {};
+  const name = (t.name || "").trim();
+  if (!name) return null;
+  const phone = t.phone || t["contact:phone"] || "";
+  const website = t.website || t["contact:website"] || "";
+  const addrParts = [t["addr:housenumber"], t["addr:street"]].filter(Boolean).join(" ");
+  const cityState = [t["addr:city"], t["addr:state"]].filter(Boolean).join(", ");
+  const location = cityState || fallbackLocation;
+  const fullLocation = addrParts ? (location ? `${addrParts}, ${location}` : addrParts) : location;
+  return Object.assign(blankProspect(), {
+    company: name, phone, website,
+    location: fullLocation,
+    webq: website ? "unknown" : "none"
+  });
+}
+
+async function findProspects(){
+  const btn = $("btn_findprospects");
+  const city = $("fp_city").value.trim();
+  const vertKey = $("fp_vertical").value;
+  const radius = $("fp_radius").value;
+  const vert = VERTICALS[vertKey];
+  const keyword = vertKey === "Custom keyword…" ? $("fp_keyword").value.trim() : vert.kw;
+
+  if (!city){ $("fp_status").textContent = "Enter a city first."; return; }
+  if (vertKey === "Custom keyword…" && !keyword){ $("fp_status").textContent = "Type a keyword to search for."; return; }
+
+  btn.disabled = true;
+  $("fp_status").textContent = `Looking up "${city}"…`;
+  try {
+    const geo = await geocodeCity(city);
+    $("fp_status").textContent = `Searching OpenStreetMap near ${geo.label.split(",").slice(0,2).join(",")}…`;
+    const query = buildOverpassQuery(geo.lat, geo.lon, radius, vert.tags, keyword);
+    const elements = await overpassSearch(query);
+    const existing = new Set(current().prospects.map(p=>normKey(p.company)));
+    let added = 0, skipped = 0, noName = 0;
+    for (const el of elements){
+      const p = elementToProspect(el, city);
+      if (!p){ noName++; continue; }
+      const key = normKey(p.company);
+      if (existing.has(key)){ skipped++; continue; }
+      existing.add(key);
+      current().prospects.push(p);
+      added++;
+    }
+    persist();
+    if (added>0) showAllFilter();
+    renderTable(); renderListSelect();
+    if (added === 0){
+      $("fp_status").textContent = `No new prospects found${noName?` (${noName} result${noName!==1?"s":""} had no listed business name and were skipped)`:""}. OpenStreetMap's coverage is volunteer-mapped and varies a lot by area — try a bigger radius, a broader city, or a different keyword. You can still paste a list manually below.`;
+    } else {
+      $("fp_status").textContent = `Added ${added} prospect${added!==1?"s":""}.` +
+        (skipped?` Skipped ${skipped} already in this list.`:"") +
+        (noName?` Skipped ${noName} unnamed result${noName!==1?"s":""}.`:"") +
+        ` Classify each one's website quality, ads, and SEO with the dropdowns below to score them.`;
+    }
+  } catch(e){
+    $("fp_status").textContent = "Search failed: " + e.message;
+  }
+  btn.disabled = false;
+}
+
+/* ---------------- Export ---------------- */
+function exportRows(){
+  return filteredSorted().map(p=>{
+    const parts = (p.owner||"").trim().split(/\s+/);
+    const first = parts[0]||"", last = parts.length>1?parts.slice(1).join(" "):"";
+    return {
+      "First Name": csvSafe(first), "Last Name": csvSafe(last), "Business Name": csvSafe(p.company),
+      "Phone": csvSafe(p.phone), "Email": csvSafe(p.email), "Location": csvSafe(p.location),
+      "Website": csvSafe(p.website), "LinkedIn": csvSafe(p.linkedin),
+      "Reviews": p.reviews, "Rating": p.rating,
+      "Opportunity Score": p._score, "Tier": tierLabel(p._tier),
+      "Signals": p._signals.join("; ")
+    };
+  });
+}
+function downloadCSV(){
+  const rows = exportRows();
+  if (!rows.length){ alert("Nothing to export — add or unfilter some prospects first."); return; }
+  const headers = Object.keys(rows[0]);
+  const q = v => `"${String(v??"").replace(/"/g,'""')}"`;
+  const csv = [headers.join(","), ...rows.map(r=>headers.map(h=>q(r[h])).join(","))].join("\n");
+  const blob = new Blob([csv],{type:"text/csv"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = (current().name||"prospects").replace(/[^a-z0-9]+/gi,"-").toLowerCase() + "-GHL-import.csv";
+  a.click(); URL.revokeObjectURL(a.href);
+}
+function downloadXLSX(){
+  if (typeof XLSX === "undefined"){
+    alert("Excel export isn't available right now — the export library failed to load (check your connection or ad-blocker). Try GHL CSV or Copy for Sheets instead.");
+    return;
+  }
+  const rows = exportRows();
+  if (!rows.length){ alert("Nothing to export — add or unfilter some prospects first."); return; }
+  try {
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Prospects");
+    XLSX.writeFile(wb, (current().name||"prospects").replace(/[^a-z0-9]+/gi,"-").toLowerCase() + "-prospects.xlsx");
+  } catch(e){
+    alert("Excel export failed: " + e.message);
+  }
+}
+async function copyForSheets(){
+  const rows = exportRows();
+  if (!rows.length){ alert("Nothing to export — add or unfilter some prospects first."); return; }
+  const headers = Object.keys(rows[0]);
+  const tsv = [headers.join("\t"), ...rows.map(r=>headers.map(h=>String(r[h]??"")).join("\t"))].join("\n");
+  try { await navigator.clipboard.writeText(tsv); }
+  catch(e){
+    const ta = document.createElement("textarea"); ta.value = tsv;
+    document.body.appendChild(ta); ta.select(); document.execCommand("copy"); document.body.removeChild(ta);
+  }
+  const t = $("copytoast"); t.style.display="block"; setTimeout(()=>t.style.display="none", 2500);
+}
+
+/* ---------------- Init & bindings ---------------- */
+function init(){
+  loadAll();
+  renderListSelect();
+  renderTable();
+  renderVerticalSelect();
+  $("btn_findprospects").onclick = findProspects;
+  $("fp_city").addEventListener("keydown", e => { if (e.key === "Enter") findProspects(); });
+  $("fp_keyword").addEventListener("keydown", e => { if (e.key === "Enter") findProspects(); });
+
+  $("listsel").onchange = () => { currentId = $("listsel").value; renderTable(); renderListSelect(); };
+  $("btn_new").onclick = () => {
+    const name = prompt("Name this list (e.g. \"Roofing – Fort Worth\"):", "New List");
+    if (!name) return;
+    const id = uid(); LISTS[id] = { name, prospects: [] }; currentId = id;
+    persist(); renderListSelect(); renderTable();
+  };
+  $("btn_rename").onclick = () => {
+    const name = prompt("Rename list:", current().name);
+    if (!name) return;
+    current().name = name; persist(); renderListSelect();
+  };
+  $("btn_delete_list").onclick = () => {
+    if (Object.keys(LISTS).length<=1){ alert("You need at least one list."); return; }
+    if (!confirm(`Delete "${current().name}" and all its prospects? This can't be undone.`)) return;
+    delete LISTS[currentId]; currentId = Object.keys(LISTS)[0];
+    persist(); renderListSelect(); renderTable();
+  };
+  $("btn_addrow").onclick = () => {
+    current().prospects.unshift(blankProspect());
+    persist(); showAllFilter(); renderTable(); renderListSelect();
+  };
+  $("btn_paste").onclick = () => { $("pastebox").classList.add("show"); $("pastearea").focus(); };
+  $("btn_cancel_paste").onclick = () => { $("pastebox").classList.remove("show"); $("pastearea").value=""; };
+  $("btn_import").onclick = () => {
+    const text = $("pastearea").value;
+    if (!text.trim()){ alert("Paste some CSV text first."); return; }
+    importCSV(text);
+    $("pastebox").classList.remove("show"); $("pastearea").value="";
+  };
+  $("search").oninput = () => { searchTerm = $("search").value; renderTable(); };
+  document.querySelectorAll("#tierbtns button").forEach(b=>{
+    b.onclick = () => {
+      document.querySelectorAll("#tierbtns button").forEach(x=>x.classList.remove("active"));
+      b.classList.add("active"); tierFilter = b.dataset.t; renderTable();
+    };
+  });
+  document.querySelector('th[data-sort="score"]').onclick = () => {
+    sortDesc = !sortDesc;
+    $("sortarrow").textContent = sortDesc ? "▾" : "▴";
+    renderTable();
+  };
+
+  $("btn_csv").onclick = downloadCSV;
+  $("btn_xlsx").onclick = downloadXLSX;
+  $("btn_copy").onclick = copyForSheets;
+}
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
