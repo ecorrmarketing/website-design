@@ -110,7 +110,7 @@ td input.narrow{width:56px;min-width:56px}
           <label class="sm" for="fp_keyword">Keyword to search for (business name contains…)</label>
           <input type="text" id="fp_keyword" placeholder="e.g. TRT, peptide clinic, remodeling">
         </div>
-        <div class="help">Searches OpenStreetMap's free public business directory — real company names, addresses, phone, and website where mapped. Coverage varies by area and category and won't match Google Maps' completeness, and there's no review count, ad status, or SEO data — you'll still classify those signals with the dropdowns below. Results are added to your current list and deduplicated automatically.</div>
+        <div class="help">Searches OpenStreetMap's free public business directory — real company names, addresses, phone, email, and website where mapped. Matching favors precision: niche verticals (TRT, med spa, personal injury) match on business name/category rather than a generic OSM tag, so you get fewer, more relevant results instead of every clinic or lawyer in the radius. Coverage varies by area and won't match Google Maps' completeness, and there's no review count, ad status, or SEO data — you'll still classify those signals with the dropdowns below. Capped at ~120 results per search — narrow the radius or keyword in dense metros to see closer matches. Results are added to your current list and deduplicated automatically.</div>
         <div class="searchstatus" id="fp_status" aria-live="polite"></div>
       </div>
     </div>
@@ -236,6 +236,12 @@ function tier(s){ return s>=70?"hot":s>=45?"warm":"low"; }
 function tierLabel(t){ return t==="hot"?"HOT":t==="warm"?"WARM":"LOW"; }
 function tierColor(t){ return t==="hot"?"var(--hot)":t==="warm"?"var(--warm)":"var(--low)"; }
 const normKey = s => (s||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+/* Escapes regex metacharacters so a user-typed custom keyword (which may
+   contain parentheses, +, etc.) is matched as literal text rather than
+   being interpreted as regex syntax by the Overpass query. */
+function escapeRegexLiteral(s){
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 function normalizeUrl(w){
   const s = (w||"").trim();
   if (!s) return "";
@@ -429,18 +435,25 @@ function importCSV(text){
 }
 
 /* ---------------- Find Prospects (OpenStreetMap — free, no key, CORS-open) ---------------- */
+/* Tags are only attached to a vertical when the OSM tag itself reliably
+   identifies that business type (a roofer's craft=roofer, a dentist's
+   amenity=dentist, etc). Generic OSM categories like amenity=clinic or
+   office=lawyer cover far more businesses than the niche they'd be used
+   for here (every clinic, every lawyer) — attaching them would flood
+   results with irrelevant matches, so those verticals rely on the name
+   keyword instead, same as verticals with no dependable tag at all. */
 const VERTICALS = {
-  "Roofing": { tags:[["craft","roofer"]], kw:"roofing" },
+  "Roofing": { tags:[["craft","roofer"]], kw:"roofing|roofer" },
   "Solar Installation": { tags:[], kw:"solar" },
   "HVAC": { tags:[["craft","hvac"]], kw:"hvac|heating|air.?condition" },
-  "Med Spa": { tags:[["shop","beauty"],["amenity","spa"]], kw:"med.?spa|aesthetics|medspa" },
-  "TRT / Wellness Clinic": { tags:[["amenity","clinic"]], kw:"trt|testosterone|hormone|wellness|men.?s health" },
+  "Med Spa": { tags:[], kw:"med.?spa|medspa|aesthetics|botox|dermal filler|laser (skin|hair)|iv therapy" },
+  "TRT / Wellness Clinic": { tags:[], kw:"trt|testosterone|hormone.?(therapy|replacement)|wellness clinic|men.?s health|peptide (clinic|therapy)" },
   "Dental / Orthodontics": { tags:[["amenity","dentist"]], kw:"dental|dentist|orthodont" },
-  "Personal Injury Law": { tags:[["office","lawyer"]], kw:"injury|accident|attorney" },
-  "Home Remodeling": { tags:[], kw:"remodel|renovation|construction" },
+  "Personal Injury Law": { tags:[], kw:"injury (law|attorney|lawyer)|accident (attorney|lawyer)|personal injury" },
+  "Home Remodeling": { tags:[], kw:"remodel|renovation|construction|contractor" },
   "Plumbing": { tags:[["craft","plumber"]], kw:"plumbing|plumber" },
-  "Landscaping / Hardscape": { tags:[["craft","gardener"]], kw:"landscap|hardscape|lawn" },
-  "Marketing Agency": { tags:[["office","advertising_agency"]], kw:"marketing|advertising agency" },
+  "Landscaping / Hardscape": { tags:[], kw:"landscap|hardscape|lawn (care|maintenance)" },
+  "Marketing Agency": { tags:[["office","advertising_agency"]], kw:"marketing|advertising agency|digital marketing" },
   "Custom keyword…": { tags:[], kw:"" }
 };
 
@@ -482,12 +495,14 @@ function buildOverpassQuery(lat, lon, radiusM, tags, keyword){
     clauses.push(`node["${k}"="${v}"](around:${radiusM},${lat},${lon});`);
     clauses.push(`way["${k}"="${v}"](around:${radiusM},${lat},${lon});`);
   }
+  // keyword arrives pre-escaped (see findProspects) — only quotes are stripped
+  // here as a last-resort safety net so they can't break out of the QL string.
   if (keyword && keyword.trim()){
-    const kw = keyword.trim().replace(/["\\]/g,"");
+    const kw = keyword.trim().replace(/"/g,"");
     clauses.push(`node["name"~"${kw}",i](around:${radiusM},${lat},${lon});`);
     clauses.push(`way["name"~"${kw}",i](around:${radiusM},${lat},${lon});`);
   }
-  return `[out:json][timeout:25];(${clauses.join("")});out center tags 80;`;
+  return `[out:json][timeout:25];(${clauses.join("")});out center tags 120;`;
 }
 
 async function overpassSearch(query){
@@ -500,6 +515,7 @@ async function overpassSearch(query){
   } catch(e){
     throw new Error(e.name === "AbortError" ? "search timed out — Overpass can be slow at peak times, try again" : "couldn't reach OpenStreetMap — check your connection");
   }
+  if (r.status === 429) throw new Error("OpenStreetMap is rate-limiting requests right now — wait about 30 seconds and try again");
   if (!r.ok) throw new Error("OpenStreetMap search failed (HTTP " + r.status + ") — try again in a moment");
   const j = await r.json();
   return j.elements || [];
@@ -510,13 +526,14 @@ function elementToProspect(el, fallbackLocation){
   const name = (t.name || "").trim();
   if (!name) return null;
   const phone = t.phone || t["contact:phone"] || "";
-  const website = t.website || t["contact:website"] || "";
+  const website = t.website || t["contact:website"] || t.url || "";
+  const email = t.email || t["contact:email"] || "";
   const addrParts = [t["addr:housenumber"], t["addr:street"]].filter(Boolean).join(" ");
   const cityState = [t["addr:city"], t["addr:state"]].filter(Boolean).join(", ");
   const location = cityState || fallbackLocation;
   const fullLocation = addrParts ? (location ? `${addrParts}, ${location}` : addrParts) : location;
   return Object.assign(blankProspect(), {
-    company: name, phone, website,
+    company: name, phone, website, email,
     location: fullLocation,
     webq: website ? "unknown" : "none"
   });
@@ -528,10 +545,14 @@ async function findProspects(){
   const vertKey = $("fp_vertical").value;
   const radius = $("fp_radius").value;
   const vert = VERTICALS[vertKey];
-  const keyword = vertKey === "Custom keyword…" ? $("fp_keyword").value.trim() : vert.kw;
+  const isCustom = vertKey === "Custom keyword…";
+  const rawKeyword = isCustom ? $("fp_keyword").value.trim() : vert.kw;
+  // Custom keywords are free text from the user, so treat them literally.
+  // Built-in vertical patterns are developer-authored regex — leave as-is.
+  const keyword = isCustom ? escapeRegexLiteral(rawKeyword) : rawKeyword;
 
   if (!city){ $("fp_status").textContent = "Enter a city first."; return; }
-  if (vertKey === "Custom keyword…" && !keyword){ $("fp_status").textContent = "Type a keyword to search for."; return; }
+  if (isCustom && !rawKeyword){ $("fp_status").textContent = "Type a keyword to search for."; return; }
 
   btn.disabled = true;
   $("fp_status").textContent = `Looking up "${city}"…`;
